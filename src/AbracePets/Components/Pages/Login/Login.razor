@@ -1,0 +1,49 @@
+﻿@page "/login"
+
+@using AbracePets.Domain.DTOs.Usuario.Request
+@using AbracePets.Domain.DTOs.Usuario.Response
+@using System.Text.Json
+
+<RadzenTemplateForm TItem="UsuarioAutenticarRequest" Data="@usuarioAutenticarRequest" Submit="@Autenticar">
+    <RadzenRow Gap="2rem" Class="rz-p-0 rz-p-lg-12">
+        <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
+            <RadzenFormField Text="Email" Style="width: 100%;">
+                <RadzenTextBox @bind-Value="usuarioAutenticarRequest.EmailLogin" Name="EmailLogin" />
+            </RadzenFormField>
+            <RadzenRequiredValidator Component="EmailLogin" Text="Email é Obrigatório" />
+        </RadzenColumn>
+    </RadzenRow>
+    <RadzenRow Gap="2rem" Class="rz-p-0 rz-p-lg-12">
+        <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
+            <RadzenFormField Text="Senha" Style="width: 100%;">
+                <RadzenPassword @bind-Value="usuarioAutenticarRequest.Senha" Name="Senha" />
+            </RadzenFormField>
+            <RadzenRequiredValidator Component="Senha" Text="Senha é Obrigatória" />
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
+        <RadzenButton ButtonType="ButtonType.Submit" Size="ButtonSize.Large" Icon="save" Text="Acessar" />
+    </RadzenStack>
+</RadzenTemplateForm>
+
+@code {
+    UsuarioAutenticarRequest usuarioAutenticarRequest = new UsuarioAutenticarRequest();
+
+    private async void Autenticar()
+    {
+        var response = await HttpClient.PostAsJsonAsync("autenticar", usuarioAutenticarRequest);
+
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var usuarioAutenticarResponse = JsonSerializer.Deserialize<UsuarioAutenticarResponse>(content, options);
+
+            HttpClient.DefaultRequestHeaders.Clear();
+            HttpClient.DefaultRequestHeaders.Add("authorization", $"bearer {usuarioAutenticarResponse.AccessToken}");
+
+            NavigationManager.NavigateTo("/pet/create");
+        }
+    }
+}

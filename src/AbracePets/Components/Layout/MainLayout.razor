@@ -1,0 +1,50 @@
+﻿@inherits LayoutComponentBase
+
+<RadzenLayout>
+    <RadzenHeader>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+            <RadzenMenu Click="OnParentClicked">
+                <RadzenMenuItem Text="Pets" Icon="home">
+                    <RadzenMenuItem Text="Login" Path="login" Icon="account_circle"></RadzenMenuItem>
+                    <RadzenMenuItem Text="Listagem" Path="pet/list" Icon="account_circle"></RadzenMenuItem>
+                    <RadzenMenuItem Text="Nova Categoria" Path="menu" Icon="line_weight" Disabled="true"></RadzenMenuItem>
+                    <RadzenMenuItem Text="Novo Pet" Path="pet/create" Icon="line_weight"></RadzenMenuItem>
+                    @*                  <RadzenMenuItem Click="OnChildClicked" Text="ChildClick" Icon="attach_file" Disabled="true"></RadzenMenuItem>
+                    <RadzenMenuItem Text="Dialog" Path="dialog" Icon="perm_media"></RadzenMenuItem>
+                    <RadzenMenuItem Text="Notification" Path="notification" Icon="announcement"></RadzenMenuItem>
+                    *@
+                </RadzenMenuItem>
+                <RadzenMenuItem Text="Filmes" Icon="payment">
+                    <RadzenMenuItem Text="Listagem" Path="checkbox" Icon="check_circle"></RadzenMenuItem>
+                    <RadzenMenuItem Text="Novo Filme" Path="textbox" Icon="input"></RadzenMenuItem>
+                    @*                  <RadzenMenuItem Text="TextArea" Path="textarea" Icon="description"></RadzenMenuItem>
+                    <RadzenMenuItem Text="Password" Path="password" Icon="payment"></RadzenMenuItem>
+                    <RadzenMenuItem Text="Numeric" Path="numeric" Icon="aspect_ratio"></RadzenMenuItem>
+                    <RadzenMenuItem Text="DatePicker" Path="datepicker" Icon="date_range"></RadzenMenuItem>
+                    *@
+                </RadzenMenuItem>
+            </RadzenMenu>
+        </RadzenStack>
+    </RadzenHeader>
+    <RadzenBody>
+        <div class="rz-p-4">
+            @Body
+        </div>
+    </RadzenBody>
+    <RadzenFooter>
+        Footer
+    </RadzenFooter>
+</RadzenLayout>
+
+
+@code {
+    void OnParentClicked(MenuItemEventArgs args)
+    {
+        //console.Log($"{args.Text} clicked from parent");
+    }
+
+    void OnChildClicked(MenuItemEventArgs args)
+    {
+        //console.Log($"{args.Text} from child clicked");
+    }
+}

@@ -1,0 +1,6 @@
+@AbracePets.API_HostAddress = http://localhost:5080
+
+GET {{AbracePets.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

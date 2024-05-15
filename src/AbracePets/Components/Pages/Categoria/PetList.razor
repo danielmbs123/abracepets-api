@@ -1,0 +1,105 @@
+﻿@page "/pet/list"
+@using AbracePets.Domain.DTOs.Pet.Response
+@using System.Text.Json
+
+<RadzenNotification />
+<RadzenDialog />
+
+<style>
+
+    .card {
+        display: inline-block;
+        white-space: nowrap;
+        margin: 30px;
+        transition: transform 0.3s;
+    }
+
+        .card:hover {
+            transform: scale(1.1);
+        }
+</style>
+
+@foreach (var petResponse in listPetListarResponse)
+{
+    <RadzenCard Class="card" Style="max-width: 200px;">
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-p-4">
+            <RadzenText JustifyContent="JustifyContent.Center" class="rz-display-flex rz-mt-2 rz-my-0" Style="max-width: 420px">
+                @petResponse.Nome
+            </RadzenText>
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+            <RadzenImage></RadzenImage>
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-p-4" Style="width: 100%">
+            <RadzenButton Variant="Variant.Text" Text="Saiba mais" />
+            <RadzenButton Icon="delete_forever" ButtonStyle="ButtonStyle.Danger" class="rz-border-radius-10" Click="() => RemoverPet(petResponse)" />
+        </RadzenStack>
+    </RadzenCard>
+
+    @*<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" Wrap="FlexWrap.Wrap">
+        <RadzenCard Class="rz-my-4 rz-mx-auto">
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="1rem" Class="rz-p-4">
+                <RadzenStack Gap="0">
+                    <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-2 rz-my-0">Nome</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body1"><b>@petResponse.Nome</b></RadzenText>
+                </RadzenStack>
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0">
+                <RadzenButton Variant="Variant.Text" Text="Mais Informações" />
+                <RadzenButton Icon="delete_forever" ButtonStyle="ButtonStyle.Danger" class="rz-border-radius-10" Click="() => RemoverPet(petResponse)" />
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenStack>*@
+}
+
+
+@code {
+    List<PetListarResponse> listPetListarResponse = [];
+    RadzenDataGrid<PetListarResponse>? _grid;
+    bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isLoading = true;
+        var response = await HttpClient.GetAsync("pet");
+        if (response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            var optionsJson = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            listPetListarResponse = JsonSerializer.Deserialize<List<PetListarResponse>>(content, optionsJson) ?? [];
+            _isLoading = false;
+        }
+        await base.OnInitializedAsync();
+    }
+
+    public void NovoPet()
+    {
+        NavigationManager.NavigateTo("pet/create");
+    }
+
+    public void EditarPet(Guid codigoPet)
+    {
+        NavigationManager.NavigateTo($"pet/edit/{codigoPet}");
+    }
+
+    public async Task RemoverPet(PetListarResponse petListarResponse)
+    {
+        var retorno = await DialogService.Confirm($"Deseja excluir um pet: {petListarResponse.Nome}", "AbracePets", new ConfirmOptions() { OkButtonText = "Sim", CancelButtonText = "Não" });
+        if (retorno is true)
+        {
+            _isLoading = true;
+            var response = await HttpClient.DeleteAsync($"Pet/{petListarResponse.Id}");
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                NotificationService.Notify(NotificationSeverity.Success, "Sucesso", content, 4000);
+
+                listPetListarResponse?.Remove(listPetListarResponse.First(p => p.Id == petListarResponse.Id));
+
+                if (_grid != null)
+                    await _grid.Reload();
+            }
+            _isLoading = false;
+        }
+    }
+}

@@ -1,0 +1,52 @@
+﻿@page "/pet/create"
+
+@using AbracePets.Domain.DTOs.Pet.Request;
+@using System.Text
+@using System.Text.Json
+
+<RadzenNotification />
+
+<RadzenTemplateForm Data="@petAdicionarRequest" Submit="@((PetAdicionarRequest args) => { AdicionarPet(); })">
+    <RadzenRow Gap="2rem" Class="rz-p-0 rz-p-lg-12">
+        <RadzenColumn Size="12" SizeSM="12" SizeMD="4" SizeLG="2">
+            <RadzenLabel Text="Nome" Component="Nome" />
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeSM="12" SizeMD="8" SizeLG="10">
+            <RadzenTextBox Style="width: 100%;" Name="Descricao"
+                           @bind-Value="petAdicionarRequest.Nome" />
+        </RadzenColumn>
+    </RadzenRow>
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
+        <RadzenButton ButtonType="ButtonType.Submit" Size="ButtonSize.Large" Icon="save" Text="Salvar" />
+        <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Large" Icon="cancel" Text="Cancelar" />
+    </RadzenStack>
+</RadzenTemplateForm>
+
+@code {
+    PetAdicionarRequest petAdicionarRequest = new PetAdicionarRequest();
+
+    public async void AdicionarPet()
+    {
+        //https://localhost:7177/pet
+
+        // var categoriaAdicionarRequestJson = JsonSerializer.Serialize(categoriaAdicionarRequest);
+        // var httpContent = new StringContent(categoriaAdicionarRequestJson, Encoding.UTF8, "application/json");
+        // var response = await HttpClient.PostAsync("categoria", httpContent);
+
+        var response = await HttpClient.PostAsJsonAsync("pet", petAdicionarRequest);
+        if (response.StatusCode == HttpStatusCode.Created)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Sucesso",
+                    Detail = content,
+                    Duration = 4000
+                });
+
+            //NavigationManager.NavigateTo("categoria-listar");
+        }
+    }
+}
