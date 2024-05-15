@@ -8,7 +8,7 @@ export repositorio="https://github.com/danielmbs123/abracepets-api.git";
 
 #Daqui pra baixo mexa somente se for realmente necessário ou se souber o que está fazendo :P
 
-export branch_name="tcc-api-$(date +%d-%m-%Y %H:%M:%S)"
+export branch_name="tcc-api-$(date +%d%m%Y-%H%M%S)"
 
 #add linux, mac and windows folders to gitignore
 echo "" >> .gitignore
@@ -25,6 +25,6 @@ git commit -m "added ignored files" .gitignore
 
 git add .
 
-git commit -am "branch com o código da aula do dia $(date)"
+git commit -am "branch com o código desenvolvido no dia $(date)"
 
 git push origin $branch_name
