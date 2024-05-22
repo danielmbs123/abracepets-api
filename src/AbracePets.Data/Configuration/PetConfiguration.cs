@@ -32,8 +32,9 @@ namespace AbracePets.Data.Configuration
                 .HasMaxLength(200)
                 .IsRequired();
 
-            builder.Property(p => p.Status)
-                .IsRequired();
+            builder.HasMany(p => p.Eventos)
+                .WithOne(p => p.Pet)
+                .HasForeignKey(p => p.PetId);
 
             builder.Property(p => p.UsuarioId)
                 .IsRequired();

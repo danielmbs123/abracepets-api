@@ -22,6 +22,37 @@ namespace AbracePets.Data.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("AbracePets.Domain.Entities.Evento", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("Data")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Descricao")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Local")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<Guid>("PetId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PetId");
+
+                    b.ToTable("TB_Evento", (string)null);
+                });
+
             modelBuilder.Entity("AbracePets.Domain.Entities.Pet", b =>
                 {
                     b.Property<Guid>("Id")
@@ -55,10 +86,6 @@ namespace AbracePets.Data.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<Guid>("UsuarioId")
                         .HasColumnType("char(36)");
 
@@ -80,6 +107,12 @@ namespace AbracePets.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)");
 
+                    b.Property<string>("Facebook")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Instagram")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -90,9 +123,23 @@ namespace AbracePets.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
+                    b.Property<string>("Telefone")
+                        .HasColumnType("longtext");
+
                     b.HasKey("Id");
 
                     b.ToTable("TB_Usuario", (string)null);
+                });
+
+            modelBuilder.Entity("AbracePets.Domain.Entities.Evento", b =>
+                {
+                    b.HasOne("AbracePets.Domain.Entities.Pet", "Pet")
+                        .WithMany("Eventos")
+                        .HasForeignKey("PetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Pet");
                 });
 
             modelBuilder.Entity("AbracePets.Domain.Entities.Pet", b =>
@@ -104,6 +151,11 @@ namespace AbracePets.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("AbracePets.Domain.Entities.Pet", b =>
+                {
+                    b.Navigation("Eventos");
                 });
 #pragma warning restore 612, 618
         }

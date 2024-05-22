@@ -11,7 +11,7 @@ namespace AbracePets.Domain.Entities
         public EnumSexo Sexo { get; private set; }
         public string Raca { get; private set; }
         public string Cor { get; private set; }
-        public EnumStatus Status { get; private set; }
+        public ICollection<Evento> Eventos { get; private set; }
         public Guid UsuarioId { get; private set; }
         public virtual Usuario Usuario { get; private set; }
 
@@ -24,8 +24,8 @@ namespace AbracePets.Domain.Entities
             EnumSexo sexo,
             string raca,
             string cor,
-            EnumStatus status,
-            Guid usuarioId
+            Guid usuarioId,
+            params Evento[] eventos
 )
         {
             Id = Guid.NewGuid();
@@ -34,9 +34,9 @@ namespace AbracePets.Domain.Entities
             Especie = especie;
             Sexo = sexo;
             Raca = raca;
-            Cor = cor;
-            Status = status;
+            Cor = cor;            
             UsuarioId = usuarioId;
+            Eventos = eventos ?? [];
         }
 
         public void Atualizar(
@@ -45,8 +45,7 @@ namespace AbracePets.Domain.Entities
             string especie,
             EnumSexo sexo,
             string raca,
-            string cor,
-            EnumStatus status)
+            string cor)
         {
             Nome = nome;
             Foto = foto;
@@ -54,7 +53,29 @@ namespace AbracePets.Domain.Entities
             Sexo = sexo;
             Raca = raca;
             Cor = cor;
-            Status = status;
+        }
+
+        public void AdicionarEvento(Evento evento)
+        {
+            if (Eventos == null)
+            {
+                Eventos = new List<Evento>();
+            }
+
+            Eventos.Add(evento);
+        }
+
+        public void RemoveEvento(Guid eventId)
+        {
+            Eventos = Eventos.ToList().Where(e => e.Id != eventId).ToList();
+        }
+
+        public EnumStatus GetLastStatus()
+        {
+            if (Eventos == null || Eventos.Count == 0) 
+                return EnumStatus.Cadastrado;
+
+            return Eventos.ToList().OrderBy(e => e.Data).LastOrDefault().Status;
         }
     }
 }

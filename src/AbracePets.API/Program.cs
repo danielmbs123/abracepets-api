@@ -12,6 +12,8 @@ using AbracePets.Domain.DTOs.Usuario.Response;
 using AbracePets.Domain.Entities;
 using AbracePets.Domain.Extensions;
 using AbracePets.API;
+using AbracePets.Domain.DTOs.Evento.Request;
+using AbracePets.Domain.DTOs.Evento.Response;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,11 +52,17 @@ app.UseHttpsRedirection();
 
 app.MapGet("/pet/listar", (AbracePetsContext context) =>
     {
-        var pets = context.PetSet.Select(filme => new PetListarResponse
+        var pets = context.PetSet.Select(pet => new PetObterResponse
         {
-            Id = filme.Id,
-            Nome = filme.Nome,
-            Foto = filme.Foto
+            Id = pet.Id,
+            Nome = pet.Nome,
+            Foto = pet.Foto,
+            Especie = pet.Especie,
+            Sexo = pet.Sexo,
+            Raca = pet.Raca,
+            Cor = pet.Cor,
+            Status = pet.GetLastStatus(),
+            UsuarioId = pet.UsuarioId
         });
 
         return Results.Ok(pets);
@@ -65,9 +73,8 @@ app.MapGet("/pet/listar", (AbracePetsContext context) =>
         operation.Summary = "Listar todos os pets";
         return operation;
     })
-    .Produces<List<PetListarResponse>>()
-    .WithTags("Pets")
-    .RequireAuthorization();
+    .Produces<List<PetObterResponse>>()
+    .WithTags("Pets");
 
 app.MapGet("/pet/{petId}", (AbracePetsContext context, Guid petId) =>
     {
@@ -84,7 +91,7 @@ app.MapGet("/pet/{petId}", (AbracePetsContext context, Guid petId) =>
             Sexo = pet.Sexo,
             Raca = pet.Raca,
             Cor = pet.Cor,
-            Status = pet.Status,
+            Status = pet.GetLastStatus(),
             UsuarioId = pet.UsuarioId
         };
 
@@ -98,8 +105,7 @@ app.MapGet("/pet/{petId}", (AbracePetsContext context, Guid petId) =>
         return operation;
     })
     .Produces<PetObterResponse>()
-    .WithTags("Pets")
-    .RequireAuthorization();
+    .WithTags("Pets");
 
 app.MapPost("/pet/adicionar", (AbracePetsContext context, PetAdicionarRequest petAdicionarRequest, ClaimsPrincipal principal) =>
     {
@@ -112,7 +118,6 @@ app.MapPost("/pet/adicionar", (AbracePetsContext context, PetAdicionarRequest pe
                 petAdicionarRequest.Sexo,
                 petAdicionarRequest.Raca,
                 petAdicionarRequest.Cor,
-                petAdicionarRequest.Status,
                 TokenUtil.GetUsuarioId(principal)
             );
 
@@ -157,8 +162,9 @@ app.MapPut("/pet/atualizar", (AbracePetsContext context, PetAtualizarRequest pet
                 petAtualizarRequest.Especie,
                 petAtualizarRequest.Sexo,
                 petAtualizarRequest.Raca,
-                petAtualizarRequest.Cor,
-                petAtualizarRequest.Status);
+                petAtualizarRequest.Cor
+            );
+
             context.PetSet.Update(pet);
             context.SaveChanges();
 
@@ -179,6 +185,8 @@ app.MapPut("/pet/atualizar", (AbracePetsContext context, PetAtualizarRequest pet
     .Produces<string>()
     .WithTags("Pets")
     .RequireAuthorization();
+
+
 
 app.MapDelete("/pet/{petId}", (AbracePetsContext context, Guid petId, ClaimsPrincipal principal) =>
     {
@@ -215,6 +223,133 @@ app.MapDelete("/pet/{petId}", (AbracePetsContext context, Guid petId, ClaimsPrin
     .WithTags("Pets")
     .RequireAuthorization();
 
+#endregion
+
+#region Endpoints de Eventos de Pet
+app.MapPost("/pet/{petId}/evento", (AbracePetsContext context, Guid petId, AdicionarEventoRequest request, ClaimsPrincipal principal) =>
+{
+    try
+    {
+        var usuarioId = TokenUtil.GetUsuarioId(principal);
+
+        var pet = context.PetSet.Find(petId);
+        if (pet is null)
+            return Results.BadRequest("Pet não Localizado.");
+
+
+        if (pet.UsuarioId != usuarioId)
+            //TODO: maybe return 403?
+            return Results.BadRequest("Não é permitido alterar um pet que não lhe pertença");
+
+        pet.AdicionarEvento(
+            new Evento(
+                request.Status,
+                request.Data ?? DateTime.Now,
+                request.Local,
+                request.Descricao,
+                petId
+            )
+        );
+
+        context.PetSet.Update(pet);
+        context.SaveChanges();
+
+
+        return Results.Ok("Pet Atualizado com Sucesso.");
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex.InnerException?.Message ?? ex.Message);
+    }
+})
+    .WithOpenApi(operation =>
+    {
+        operation.Description = "Endpoint para Adicionar Eventos no Pet";
+        operation.Summary = "Adicionar Evento no Pet";
+        return operation;
+    })
+    .Produces<string>()
+    .WithTags("Eventos Pets")
+    .RequireAuthorization();
+
+app.MapGet("/pet/{petId}/evento", (AbracePetsContext context, Guid petId, ClaimsPrincipal principal) =>
+{
+    try
+    {
+        var usuarioId = TokenUtil.GetUsuarioId(principal);
+
+        var pet = context.PetSet.Find(petId);
+        if (pet is null)
+            return Results.BadRequest("Pet não Localizado.");
+
+
+        if (pet.UsuarioId != usuarioId)
+            //TODO: maybe return 403?
+            return Results.BadRequest("Não é permitido alterar um pet que não lhe pertença");
+
+        var eventos = (pet.Eventos ?? []).Select(e => new EventoResponse
+        {
+            Data = e.Data,
+            Descricao = e.Descricao,
+            Id = e.Id,
+            Local = e.Local,
+            PetId = e.PetId,
+            Status = e.Status
+        });
+
+        return Results.Ok(eventos);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex.InnerException?.Message ?? ex.Message);
+    }
+})
+    .WithOpenApi(operation =>
+    {
+        operation.Description = "Endpoint para Listar Eventos do Pet";
+        operation.Summary = "Listas Eventos do Pet";
+        return operation;
+    })
+    .Produces<List<EventoResponse>>()
+    .WithTags("Eventos Pets");
+
+app.MapDelete("/pet/{petId}/evento/{eventoId}", (AbracePetsContext context, Guid petId, Guid eventoId, ClaimsPrincipal principal) =>
+{
+    try
+    {
+        var usuarioId = TokenUtil.GetUsuarioId(principal);
+
+        var pet = context.PetSet.Find(petId);
+        if (pet is null)
+            return Results.BadRequest("Pet não Localizado.");
+
+
+        if (pet.UsuarioId != usuarioId)
+            //TODO: maybe return 403?
+            return Results.BadRequest("Não é permitido alterar um pet que não lhe pertença");
+
+        pet.RemoveEvento(eventoId);
+
+        context.PetSet.Update(pet);
+        context.SaveChanges();
+
+
+        return Results.Ok("Pet Atualizado com Sucesso.");
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex.InnerException?.Message ?? ex.Message);
+    }
+})
+    .WithOpenApi(operation =>
+    {
+        operation.Description = "Endpoint para Adicionar Eventos no Pet";
+        operation.Summary = "Adicionar Evento no Pet";
+        return operation;
+    })
+    .Produces<string>()
+    .WithTags("Eventos Pets")
+    .RequireAuthorization();
 #endregion
 
 #region Endpoints de Usuários
@@ -281,7 +416,11 @@ app.MapPost("/usuario", (AbracePetsContext context, UsuarioAdicionarRequest usua
             var usuario = new Usuario(
                 usuarioAdicionarRequest.Nome,
                 usuarioAdicionarRequest.EmailLogin,
-                usuarioAdicionarRequest.Senha.EncryptPassword());
+                usuarioAdicionarRequest.Senha.EncryptPassword(), 
+                usuarioAdicionarRequest.Telefone, 
+                usuarioAdicionarRequest.Facebook, 
+                usuarioAdicionarRequest.Instagram
+            );
 
             context.UsuariosSet.Add(usuario);
             context.SaveChanges();

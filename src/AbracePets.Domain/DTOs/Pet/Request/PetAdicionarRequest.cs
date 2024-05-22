@@ -10,5 +10,4 @@ public class PetAdicionarRequest
     public EnumSexo Sexo { get; set; }
     public string Raca { get; set; }
     public string Cor { get; set; }
-    public EnumStatus Status { get; set; }
 }
