@@ -10,6 +10,7 @@ public class Usuario : EntityBase
     public string Telefone { get; private set; }
     public string Facebook { get; private set; }
     public string Instagram { get; private set; }
+    public bool IsAdmin { get; private set; }
 
     protected Usuario() { }
 
@@ -19,7 +20,8 @@ public class Usuario : EntityBase
         string senha,
         string telefone,
         string facebook,
-        string instagram)
+        string instagram,
+        bool isAdmin)
     {
         Nome = nome;
         EmailLogin = emailLogin;
@@ -27,6 +29,7 @@ public class Usuario : EntityBase
         Telefone = telefone;
         Facebook = facebook;
         Instagram = instagram;
+        IsAdmin = isAdmin;
     }
 
     public void AlterarSenha(string senha)
@@ -43,5 +46,10 @@ public class Usuario : EntityBase
     {
         Facebook = facebook;
         Instagram = instagram;
+    }
+
+    public void DefinirAdmin(bool isAdmin)
+    {
+        IsAdmin = isAdmin;
     }
 }

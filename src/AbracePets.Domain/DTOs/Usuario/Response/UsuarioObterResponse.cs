@@ -8,4 +8,5 @@ public class UsuarioObterResponse
     public string Telefone { get; set; }
     public string Facebook { get; set; }
     public string Instagram { get; set; }
+    public bool IsAdmin { get; set; }
 }

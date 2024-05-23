@@ -3,7 +3,7 @@
 public class UsuarioAutenticarResponse
 {
     public Guid Id { get; set; }
-    public string Nome { get; set; }
+    public string Nome { get; set; }    
     public string AccessToken { get; set; }
 
     public UsuarioAutenticarResponse(

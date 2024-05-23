@@ -14,6 +14,7 @@ using AbracePets.Domain.Extensions;
 using AbracePets.API;
 using AbracePets.Domain.DTOs.Evento.Request;
 using AbracePets.Domain.DTOs.Evento.Response;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,7 +79,7 @@ app.MapGet("/pet/listar", (AbracePetsContext context) =>
 
 app.MapGet("/pet/{petId}", (AbracePetsContext context, Guid petId) =>
     {
-        var pet = context.PetSet.Find(petId);
+        var pet = context.PetSet.Include(p => p.Eventos).FirstOrDefault(p => p.Id == petId);
         if (pet is null)
             return Results.BadRequest("Pet não Localizado.");
 
@@ -232,7 +233,7 @@ app.MapPost("/pet/{petId}/evento", (AbracePetsContext context, Guid petId, Adici
     {
         var usuarioId = TokenUtil.GetUsuarioId(principal);
 
-        var pet = context.PetSet.Find(petId);
+        var pet = context.PetSet.Include(p => p.Eventos).FirstOrDefault(p => p.Id == petId);
         if (pet is null)
             return Results.BadRequest("Pet não Localizado.");
 
@@ -278,7 +279,7 @@ app.MapGet("/pet/{petId}/evento", (AbracePetsContext context, Guid petId, Claims
     {
         var usuarioId = TokenUtil.GetUsuarioId(principal);
 
-        var pet = context.PetSet.Find(petId);
+        var pet = context.PetSet.Include(p => p.Eventos).FirstOrDefault(p => p.Id == petId);
         if (pet is null)
             return Results.BadRequest("Pet não Localizado.");
 
@@ -319,7 +320,7 @@ app.MapDelete("/pet/{petId}/evento/{eventoId}", (AbracePetsContext context, Guid
     {
         var usuarioId = TokenUtil.GetUsuarioId(principal);
 
-        var pet = context.PetSet.Find(petId);
+        var pet = context.PetSet.Include(p => p.Eventos).FirstOrDefault(p => p.Id == petId);
         if (pet is null)
             return Results.BadRequest("Pet não Localizado.");
 
@@ -359,7 +360,11 @@ app.MapGet("/usuario", (AbracePetsContext context) =>
         var usuarios = context.UsuariosSet.Select(usuario => new UsuarioListarResponse
         {
             Id = usuario.Id,
-            Nome = usuario.Nome
+            Nome = usuario.Nome,
+            IsAdmin = usuario.IsAdmin,
+            Instagram = usuario.Instagram,
+            Facebook = usuario.Facebook,
+            Telefone = usuario.Telefone
         });
 
         return Results.Ok(usuarios);
@@ -384,7 +389,11 @@ app.MapGet("/usuario/{usuarioId}", (AbracePetsContext context, Guid usuarioId) =
         {
             Id = usuario.Id,
             Nome = usuario.Nome,
-            EmailLogin = usuario.EmailLogin
+            EmailLogin = usuario.EmailLogin,
+            IsAdmin = usuario.IsAdmin,
+            Instagram = usuario.Instagram,
+            Facebook = usuario.Facebook,
+            Telefone = usuario.Telefone,
         };
 
         return Results.Ok(usuarioDto);
@@ -416,10 +425,11 @@ app.MapPost("/usuario", (AbracePetsContext context, UsuarioAdicionarRequest usua
             var usuario = new Usuario(
                 usuarioAdicionarRequest.Nome,
                 usuarioAdicionarRequest.EmailLogin,
-                usuarioAdicionarRequest.Senha.EncryptPassword(), 
-                usuarioAdicionarRequest.Telefone, 
-                usuarioAdicionarRequest.Facebook, 
-                usuarioAdicionarRequest.Instagram
+                usuarioAdicionarRequest.Senha.EncryptPassword(),
+                usuarioAdicionarRequest.Telefone,
+                usuarioAdicionarRequest.Facebook,
+                usuarioAdicionarRequest.Instagram,
+                false
             );
 
             context.UsuariosSet.Add(usuario);

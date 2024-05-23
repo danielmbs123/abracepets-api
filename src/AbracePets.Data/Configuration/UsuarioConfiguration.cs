@@ -22,6 +22,10 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
             .HasMaxLength(2000)
             .IsRequired();
 
+        builder.Property(u => u.IsAdmin)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.ToTable("TB_Usuario");
     }
 }
