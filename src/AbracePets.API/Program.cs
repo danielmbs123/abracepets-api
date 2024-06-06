@@ -282,10 +282,11 @@ app.MapGet("/pet/{petId}/evento", (AbracePetsContext context, Guid petId, Claims
         if (pet is null)
             return Results.BadRequest("Pet não Localizado.");
 
-
-        if (pet.UsuarioId != usuarioId)
+        /*
+         if (pet.UsuarioId != usuarioId)
             //TODO: maybe return 403?
             return Results.BadRequest("Não é permitido alterar um pet que não lhe pertença");
+        */
 
         var eventos = (pet.Eventos ?? []).Select(e => new EventoResponse
         {
@@ -324,9 +325,9 @@ app.MapDelete("/pet/{petId}/evento/{eventoId}", (AbracePetsContext context, Guid
             return Results.BadRequest("Pet não Localizado.");
 
 
-        if (pet.UsuarioId != usuarioId)
+        /*if (pet.UsuarioId != usuarioId)
             //TODO: maybe return 403?
-            return Results.BadRequest("Não é permitido alterar um pet que não lhe pertença");
+            return Results.BadRequest("Não é permitido alterar um pet que não lhe pertença");*/
 
         pet.RemoveEvento(eventoId);
 
@@ -384,7 +385,11 @@ app.MapGet("/usuario/{usuarioId}", (AbracePetsContext context, Guid usuarioId) =
         {
             Id = usuario.Id,
             Nome = usuario.Nome,
-            EmailLogin = usuario.EmailLogin
+            EmailLogin = usuario.EmailLogin,
+            Telefone = usuario.Telefone,      
+            Facebook = usuario.Facebook,
+            Instagram = usuario.Instagram,
+            IsAdmin = usuario.IsAdmin,
         };
 
         return Results.Ok(usuarioDto);
@@ -474,6 +479,38 @@ app.MapPut("/usuario/alterar-senha", (AbracePetsContext context, UsuarioAtualiza
     .Produces<string>()
     .WithTags("Usuários")
     .RequireAuthorization();
+
+app.MapPut("/usuario/atualizar-redes-sociais", (AbracePetsContext context, UsuarioAtualizarRedesSociaisRequest usuarioAtualizarRedesSociaisRequest) =>
+{
+    try
+    {
+        var usuario = context.UsuariosSet.Find(usuarioAtualizarRedesSociaisRequest.Id);
+        if (usuario is null)
+            return Results.BadRequest("Usuário não Localizado.");
+
+        usuario.AlterarRedesSociais(usuarioAtualizarRedesSociaisRequest.Facebook, usuarioAtualizarRedesSociaisRequest.Instagram);
+        usuario.AlterarTelefone(usuarioAtualizarRedesSociaisRequest.Telefone);
+
+        context.UsuariosSet.Update(usuario);
+        context.SaveChanges();
+
+        return Results.Ok("Redes Sociais Atualizadas com Sucesso.");
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex.InnerException?.Message ?? ex.Message);
+    }
+})
+    .WithOpenApi(operation =>
+    {
+        operation.Description = "Endpoint para Atualizar as Redes Sociais do Usuário";
+        operation.Summary = "Atualizar Redes Sociais";
+        return operation;
+    })
+    .Produces<string>()
+    .WithTags("Usuários")
+    .RequireAuthorization();
+
 
 #endregion
 
