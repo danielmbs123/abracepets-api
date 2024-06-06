@@ -8,7 +8,7 @@ export repositorio="https://github.com/danielmbs123/abracepets-api.git";
 
 #Daqui pra baixo mexa somente se for realmente necessário ou se souber o que está fazendo :P
 
-export branch_name="tcc-api-$(date +%d-%m-%Y %H:%M:%S)"
+export branch_name="tcc-api-$(date +%d%m%Y-%H%M%S)"
 
 #add linux, mac and windows folders to gitignore
 echo "" >> .gitignore
