@@ -8,6 +8,7 @@ namespace AbracePets.Data.Context
     {
         public DbSet<Pet> PetSet { get; set; }
         public DbSet<Usuario> UsuariosSet { get; set; }
+        public DbSet<Evento> EventoSet { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -237,9 +237,10 @@ app.MapPost("/pet/{petId}/evento", (AbracePetsContext context, Guid petId, Adici
             return Results.BadRequest("Pet não Localizado.");
 
 
-        if (pet.UsuarioId != usuarioId)
+        /*if (pet.UsuarioId != usuarioId)
             //TODO: maybe return 403?
             return Results.BadRequest("Não é permitido alterar um pet que não lhe pertença");
+        */
 
         pet.AdicionarEvento(
             new Evento(
@@ -272,23 +273,11 @@ app.MapPost("/pet/{petId}/evento", (AbracePetsContext context, Guid petId, Adici
     .WithTags("Eventos Pets")
     .RequireAuthorization();
 
-app.MapGet("/pet/{petId}/evento", (AbracePetsContext context, Guid petId, ClaimsPrincipal principal) =>
+app.MapGet("/pet/evento", (AbracePetsContext context) =>
 {
     try
     {
-        var usuarioId = TokenUtil.GetUsuarioId(principal);
-
-        var pet = context.PetSet.Find(petId);
-        if (pet is null)
-            return Results.BadRequest("Pet não Localizado.");
-
-        /*
-         if (pet.UsuarioId != usuarioId)
-            //TODO: maybe return 403?
-            return Results.BadRequest("Não é permitido alterar um pet que não lhe pertença");
-        */
-
-        var eventos = (pet.Eventos ?? []).Select(e => new EventoResponse
+        var eventos = context.EventoSet.Select(e => new EventoResponse
         {
             Data = e.Data,
             Descricao = e.Descricao,
@@ -296,7 +285,7 @@ app.MapGet("/pet/{petId}/evento", (AbracePetsContext context, Guid petId, Claims
             Local = e.Local,
             PetId = e.PetId,
             Status = e.Status
-        });
+        }).ToList();
 
         return Results.Ok(eventos);
     }
@@ -307,12 +296,47 @@ app.MapGet("/pet/{petId}/evento", (AbracePetsContext context, Guid petId, Claims
 })
     .WithOpenApi(operation =>
     {
-        operation.Description = "Endpoint para Listar Eventos do Pet";
-        operation.Summary = "Listas Eventos do Pet";
+        operation.Description = "Endpoint para Listar Eventos de Todos os Pets";
+        operation.Summary = "Listar Eventos de Todos os Pets";
         return operation;
     })
     .Produces<List<EventoResponse>>()
     .WithTags("Eventos Pets");
+
+app.MapGet("/pet/{petId}/evento", (AbracePetsContext context, Guid petId) =>
+{
+    try
+    {
+        // Busca os eventos relacionados ao pet específico
+        var eventos = context.EventoSet
+            .Where(e => e.PetId == petId)
+            .Select(e => new EventoResponse
+            {
+                Data = e.Data,
+                Descricao = e.Descricao,
+                Id = e.Id,
+                Local = e.Local,
+                PetId = e.PetId,
+                Status = e.Status
+            })
+            .ToList();
+
+        return Results.Ok(eventos);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex.InnerException?.Message ?? ex.Message);
+    }
+})
+.WithOpenApi(operation =>
+{
+    operation.Description = "Endpoint para Listar Eventos de um Pet específico";
+    operation.Summary = "Listar Eventos de um Pet";
+    operation.Parameters[0].Description = "Id do Pet";
+    return operation;
+})
+.Produces<List<EventoResponse>>()
+.WithTags("Eventos Pets");
 
 app.MapDelete("/pet/{petId}/evento/{eventoId}", (AbracePetsContext context, Guid petId, Guid eventoId, ClaimsPrincipal principal) =>
 {
@@ -367,7 +391,7 @@ app.MapGet("/usuario", (AbracePetsContext context) =>
     })
     .WithOpenApi(operation =>
     {
-        operation.Description = "Endpoint para obter todos os usu�rios cadastrados";
+        operation.Description = "Endpoint para obter todos os usu rios cadastrados";
         operation.Summary = "Listar todos os Usuários";
         return operation;
     })
@@ -522,7 +546,7 @@ app.MapPost("/autenticar", (AbracePetsContext context, UsuarioAutenticarRequest 
             p.EmailLogin == usuarioAutenticarRequest.EmailLogin &&
             p.Senha == usuarioAutenticarRequest.Senha.EncryptPassword());
         if (usuario is null)
-            return Results.BadRequest("N�o foi Poss�vel Efetuar o Login.");
+            return Results.BadRequest("N o foi Poss vel Efetuar o Login.");
 
         var claims = new[]
         {
@@ -532,11 +556,11 @@ app.MapPost("/autenticar", (AbracePetsContext context, UsuarioAutenticarRequest 
         };
 
         //Recebe uma instância da Classe SymmetricSecurityKey
-        //armazenando a chave de criptografia usada na cria��o do Token
+        //armazenando a chave de criptografia usada na cria  o do Token
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("{ccdc511d-23f0-4a30-995e-ebc3658e901d}"));
 
         //Recebe um objeto do tipo SigninCredentials contendo a chave de
-        //criptografia e o algoritimo de seguran�a empregados na gera��o
+        //criptografia e o algoritimo de seguran a empregados na gera  o
         //de assinaturas digitais para tokens
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
