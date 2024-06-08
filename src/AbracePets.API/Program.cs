@@ -512,6 +512,7 @@ app.MapPut("/usuario/atualizar-redes-sociais", (AbracePetsContext context, Usuar
         if (usuario is null)
             return Results.BadRequest("Usuário não Localizado.");
 
+        usuario.AlterarNome(usuarioAtualizarRedesSociaisRequest.Nome);
         usuario.AlterarRedesSociais(usuarioAtualizarRedesSociaisRequest.Facebook, usuarioAtualizarRedesSociaisRequest.Instagram);
         usuario.AlterarTelefone(usuarioAtualizarRedesSociaisRequest.Telefone);
 

@@ -47,4 +47,10 @@ public class Usuario : EntityBase
         Facebook = facebook;
         Instagram = instagram;
     }
+
+    public void AlterarNome(string nome)
+    {
+        Nome = nome;
+    }
+
 }
